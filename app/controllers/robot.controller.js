@@ -6,6 +6,8 @@ const Robot = db.robot;
 const Robot_Statistic = db.robot_statistic;
 const Robot_Video = db.robot_video;
 const Robot_Schedule = db.robot_schedule;
+const Robot_Share = db.robot_share;
+const admin = require("firebase-admin");
 
 exports.add_robot = async (req, res) => {
   try {
@@ -221,9 +223,12 @@ exports.create_schedule = async (req, res) => {
       hour: req.body.hour,
       minute: req.body.minute,
       interval: req.body.interval,
-      daySelected: JSON.parse(req.body.daySelected),
+      daySelected: req.body.daySelected,
     }).save();
-    return res.status(200).send({ message: "Schedule created" });
+    const schedule_list = await Robot_Schedule.find({ robotId: robot.id }).sort(
+      { hour: 1, minute: 1 }
+    );
+    return res.status(200).send(schedule_list);
   } catch (err) {
     console.log(err);
     return res.status(500).send();
@@ -271,6 +276,88 @@ exports.toggle_schedule = async (req, res) => {
     schedule.activate = req.body.activate;
     await schedule.save();
     return res.status(200).send({ state: schedule.activate });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+};
+
+exports.add_shared_robot = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: sanitize(req.body.email) });
+    if (!user) {
+      return res.status(404).send({ message: "user not found" });
+    }
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    const check_duplicate = await Robot_Share.findOne({
+      robotId: robot,
+      userId: user,
+    });
+    if (check_duplicate)
+      return res.status(403).send({ message: "Already share to this user" });
+    const firebase_robot = admin.firestore().doc("robots/" + robot.key);
+    if (!firebase_robot) {
+      return res.status(404).send();
+    }
+    await admin.firestore().collection("robotsUsers").add({
+      robot: firebase_robot,
+      uid: user.uid,
+    });
+    await new Robot_Share({
+      robotId: robot,
+      userId: user,
+    }).save();
+    return res.status(200).send({ message: "Share successful" });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+};
+
+exports.list_shared_robot_user = async (req, res) => {
+  try {
+    let result = [];
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    const share_list = await Robot_Share.find({ robotId: robot }).populate(
+      "userId"
+    );
+    for (let i = 0; i < share_list.length; i++) {
+      const firebase_user = await admin
+        .auth()
+        .getUser(share_list[i].userId.uid);
+      result.push(firebase_user);
+    }
+    return res.status(200).send(result);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+};
+
+exports.remove_share_user = async (req, res) => {
+  try {
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    const firebase_robot = admin.firestore().doc("robots/" + robot.key);
+    const user_to_remove = await User.findOne({ uid: sanitize(req.body.uid) });
+    const share_data = await Robot_Share.findOne({
+      robotId: robot,
+      userId: user_to_remove,
+    });
+    if (!share_data) {
+      return res.status(404).send({ message: "user not found" });
+    }
+    const data = await admin
+      .firestore()
+      .collection("robotsUsers")
+      .where("uid", "==", user_to_remove.uid)
+      .where("robot", "==", firebase_robot)
+      .get();
+    data.forEach(async (doc) => {
+      console.log(doc.id);
+      await admin.firestore().collection("robotsUsers").doc(doc.id).delete();
+    });
+    await share_data.delete();
+    return res.status(200).send({ message: "remove user successfully" });
   } catch (err) {
     console.log(err);
     return res.status(500).send(err);

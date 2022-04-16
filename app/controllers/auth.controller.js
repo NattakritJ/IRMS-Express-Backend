@@ -6,8 +6,10 @@ const fs = require("fs");
 const path = require("path");
 const handlebars = require("handlebars");
 const mailer = require("nodemailer");
+const { v4: uuidV4 } = require("uuid");
+const Robot = db.robot;
 
-const profileImage = require("../assets/profileImage.json"); 
+const profileImage = require("../assets/profileImage.json");
 
 // Database Collection
 const User = db.user;
@@ -99,6 +101,21 @@ exports.sign_up = async (req, res) => {
       displayName: req.body.displayName,
       disabled: true,
     });
+    const customClaims = {
+      newUser: false,
+      role: "user",
+    };
+    await admin.auth().setCustomUserClaims(firebase_user.uid, customClaims);
+    await admin
+      .firestore()
+      .collection("userTokens")
+      .doc(firebase_user.uid)
+      .set({ wsToken: uuidV4(), revoked: false });
+    await admin
+      .firestore()
+      .collection("authMetadata")
+      .doc("1")
+      .update({ count: admin.firestore.FieldValue.increment(1) });
     const new_user = new User({
       uid: firebase_user.uid,
       email: firebase_user.email,
@@ -139,16 +156,14 @@ exports.sign_up = async (req, res) => {
       subject: "[IRMS] Verify Email",
       html: complete_html,
     };
-    smtpTransport.sendMail(msg, function(err, response){
-        smtpTransport.close();
-        if (err){
-
-            return res.status(500).send({message: "internal server error"});
-        }
-        else {
-            // return res.status(200).send({ status: "Transfer request created"})
-            return res.status(200).send({ verifyLink: token });
-        }
+    smtpTransport.sendMail(msg, function (err, response) {
+      smtpTransport.close();
+      if (err) {
+        return res.status(500).send({ message: "internal server error" });
+      } else {
+        // return res.status(200).send({ status: "Transfer request created"})
+        return res.status(200).send({ verifyLink: token });
+      }
     });
     return res.status(200).send({
       message:

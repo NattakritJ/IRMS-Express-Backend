@@ -71,6 +71,21 @@ module.exports = function (app) {
     authJwt.verifyToken,
     robotController.delete_schedule
   );
+  router.post(
+    "/:robotKey/share/add",
+    authJwt.verifyToken,
+    robotController.add_shared_robot
+  );
+  router.post(
+    "/:robotKey/share/remove",
+    authJwt.verifyToken,
+    robotController.remove_share_user
+  );
+  router.get(
+    "/:robotKey/share/list",
+    authJwt.verifyToken,
+    robotController.list_shared_robot_user
+  );
 
   app.use("/apis/robot", router);
 };
