@@ -130,3 +130,4 @@ ca-certificate.crt
 package-lock.json
 app/.DS_Store
 .DS_Store
+app/public/*

@@ -10,6 +10,7 @@ const app = express();
 
 //enable dotenv
 require("dotenv").config();
+app.use("/video", express.static("./app/public"));
 
 //firebase configuration
 var serviceAccount = require("./serviceAccountKey.json");
@@ -36,13 +37,13 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 // enabled file upload
-app.use(
-  fileUpload({
-    limits: {
-      fileSize: 1000000, //1mb
-    },
-  })
-);
+// app.use(
+//   fileUpload({
+//     limits: {
+//       fileSize: 1000000, //1mb
+//     },
+//   })
+// );
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));

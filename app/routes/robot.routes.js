@@ -86,6 +86,6 @@ module.exports = function (app) {
     authJwt.verifyToken,
     robotController.list_shared_robot_user
   );
-
+  router.post("/:robotKey/video/upload", robotController.upload_video);
   app.use("/apis/robot", router);
 };

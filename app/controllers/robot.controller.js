@@ -8,6 +8,10 @@ const Robot_Video = db.robot_video;
 const Robot_Schedule = db.robot_schedule;
 const Robot_Share = db.robot_share;
 const admin = require("firebase-admin");
+const path = require("path");
+const multer = require("multer");
+const fs = require("fs");
+const util = require("util");
 
 exports.add_robot = async (req, res) => {
   try {
@@ -361,5 +365,72 @@ exports.remove_share_user = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).send(err);
+  }
+};
+
+// Upload Service
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "..", "public"));
+  },
+  filename: (req, file, cb) => {
+    const random = Math.round(Math.random() * 10 ** 7).toFixed(0);
+    const fileName = `file-${Date.now()}-${random}${path.extname(
+      file.originalname
+    )}`;
+    cb(null, fileName);
+  },
+});
+
+const uploadSingle = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (
+      file.mimetype &&
+      ["image/png", "image/jpg", "image/jpeg", "text/plain"].indexOf(
+        file.mimetype
+      ) > -1
+    ) {
+      cb(null, true);
+    } else {
+      cb(null, false);
+      req.validationError = true;
+      return cb(null, false, "Forbidden file extension.");
+    }
+  },
+}).single("file");
+const UploadSingleService = util.promisify(uploadSingle);
+
+exports.upload_video = async (req, res) => {
+  try {
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    await UploadSingleService(req, res);
+
+    if (req.validationError) {
+      console.log("file invalid");
+      return res.status(500).send();
+    }
+    if (!req.file) {
+      console.log("file is req");
+      return res.status(500).send();
+    }
+    await new Robot_Video({
+      robotId: robot,
+      date: new Date(),
+      fileName: "Video name",
+      url: `${process.env.SERVER_URL}/video/${req.file.filename}`,
+    }).save();
+    return res.status(200).send({
+      file: {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        filename: req.file.filename,
+        size: req.file.size,
+        path: `${process.env.SERVER_URL}/video/${req.file.filename}`,
+      },
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ message: err });
   }
 };
