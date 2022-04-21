@@ -190,6 +190,16 @@ exports.delete_video = async (req, res) => {
         .status(403)
         .send({ Message: "You don't have permission to edit this record." });
     }
+    try {
+      fs.unlinkSync(path.join(__dirname, "..", "public", video.fileName));
+    } catch (err) {
+      await video.delete();
+      return res
+        .status(200)
+        .send({
+          message: "record delete but video file not found in the server",
+        });
+    }
     await video.delete();
     return res.status(200).send({ message: "record deleted" });
   } catch (err) {
@@ -417,7 +427,7 @@ exports.upload_video = async (req, res) => {
     await new Robot_Video({
       robotId: robot,
       date: new Date(),
-      fileName: "Video name",
+      fileName: req.file.filename,
       url: `${process.env.SERVER_URL}/video/${req.file.filename}`,
     }).save();
     return res.status(200).send({
