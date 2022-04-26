@@ -12,6 +12,9 @@ const app = express();
 require("dotenv").config();
 app.use("/video", express.static("./app/public"));
 
+//enable cron
+require("./app/controllers/cron/cron-jobs");
+
 //firebase configuration
 var serviceAccount = require("./serviceAccountKey.json");
 admin.initializeApp({

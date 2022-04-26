@@ -9,7 +9,7 @@ const Robot_Setting = mongoose.model(
       ref: "Robot",
     },
     key: String,
-    state: Boolean,
+    value: String,
   }).plugin(sanitizerPlugin)
 );
 

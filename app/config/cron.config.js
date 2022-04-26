@@ -1,3 +1,3 @@
 module.exports = {
-  JOB_SCHEDULE: "* * * * *",
+  JOB_SCHEDULE: "*/10 * * * * *",
 };

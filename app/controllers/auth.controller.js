@@ -6,6 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const handlebars = require("handlebars");
 const mailer = require("nodemailer");
+const admin = require("firebase-admin");
 const { v4: uuidV4 } = require("uuid");
 const Robot = db.robot;
 
@@ -27,9 +28,6 @@ const smtp = {
   },
 };
 const smtpTransport = mailer.createTransport(smtp);
-
-// Firebase
-const admin = require("firebase-admin");
 
 exports.users_list = async (req, res) => {
   try {
