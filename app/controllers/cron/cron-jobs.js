@@ -85,7 +85,7 @@ cron.schedule(JOB_SCHEDULE, async () => {
           runSchedule(robot);
           await new Robot_Notification({
             robotId: robot,
-            message: `Weekly (${schedule.name}) started`,
+            message: `Weekly schedule (${schedule.name}) started`,
             isView: false,
             isComplete: false,
           }).save();
