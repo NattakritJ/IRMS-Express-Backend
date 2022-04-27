@@ -2,7 +2,6 @@ require("dotenv").config();
 const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
 const cookieParser = require("cookie-parser");
-const fileUpload = require("express-fileupload");
 const express = require("express");
 const cors = require("cors");
 const db = require("./app/models");

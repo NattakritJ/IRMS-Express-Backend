@@ -1,8 +1,29 @@
 const db = require("../models");
 const sanitize = require("mongo-sanitize");
+const multer = require("multer");
+const fs = require("fs");
+const util = require("util");
+const path = require("path");
 const User = db.user;
 const User_Detail = db.user_detail;
 const User_Setting = db.user_setting;
+
+const uploadSingle = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    if (
+      file.mimetype &&
+      ["image/png", "image/jpg", "image/jpeg"].indexOf(file.mimetype) > -1
+    ) {
+      cb(null, true);
+    } else {
+      cb(null, false);
+      req.validationError = true;
+      return cb(null, false, "Forbidden file extension.");
+    }
+  },
+}).single("file");
+const UploadSingleService = util.promisify(uploadSingle);
 
 exports.edit_user = async (req, res) => {
   try {
@@ -14,10 +35,6 @@ exports.edit_user = async (req, res) => {
       }
       if (req.body.lastName) {
         user_detail.lastName = sanitize(req.body.lastName);
-      }
-      if (req.files) {
-        user_detail.profileImage =
-          req.files.profileImage.data.toString("base64");
       }
       await user_detail.save();
       return res.status(200).send({
@@ -36,9 +53,9 @@ exports.update_image = async (req, res) => {
     const user = await User.findById(req.userId);
     if (user) {
       const user_detail = await User_Detail.findById(user.userDetail);
-      if (req.files) {
-        user_detail.profileImage =
-          req.files.profileImage.data.toString("base64");
+      await UploadSingleService(req, res);
+      if (req.file) {
+        user_detail.profileImage = req.file.buffer.toString("base64");
       }
       await user_detail.save();
       return res.status(200).send(user_detail.profileImage);

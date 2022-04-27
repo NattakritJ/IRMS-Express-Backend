@@ -36,6 +36,9 @@ exports.delete_robot = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     if (!robot.ownerId.equals(user.id)) {
       return res
         .status(403)
@@ -53,6 +56,9 @@ exports.edit_robot = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     if (!robot.ownerId.equals(user.id)) {
       return res
         .status(403)
@@ -87,6 +93,9 @@ exports.view_statistic = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const statistic_list = await Robot_Statistic.find({ robotId: robot.id });
     return res.status(200).send(statistic_list);
   } catch (err) {
@@ -99,6 +108,9 @@ exports.delete_statistic = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const statistic = await Robot_Statistic.findById(
       sanitize(req.body.statisticId)
     );
@@ -121,6 +133,9 @@ exports.delete_statistic = async (req, res) => {
 exports.statistic_summary = async (req, res) => {
   try {
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const statistic_summary = await Robot_Statistic.aggregate([
       { $match: { robotId: { $in: [robot._id] } } },
       {
@@ -172,6 +187,9 @@ exports.view_video = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const video_list = await Robot_Video.find({ robotId: robot.id });
     return res.status(200).send(video_list);
   } catch (err) {
@@ -184,6 +202,9 @@ exports.delete_video = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const video = await Robot_Video.findById(sanitize(req.body.videoId));
     if (!video) {
       return res.status(404).send({ message: "record not found" });
@@ -245,6 +266,9 @@ const UploadSingleService = util.promisify(uploadSingle);
 exports.upload_video = async (req, res) => {
   try {
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     await UploadSingleService(req, res);
 
     if (req.validationError) {
@@ -285,6 +309,9 @@ exports.view_setting = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const setting_list = await Robot_Setting.find({ robotId: robot.id });
     return res.status(200).send(setting_list);
   } catch (err) {
@@ -297,6 +324,9 @@ exports.view_schedule = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const schedule_list = await Robot_Schedule.find({ robotId: robot.id }).sort(
       { hour: 1, minute: 1 }
     );
@@ -338,6 +368,9 @@ exports.delete_schedule = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const schedule = await Robot_Schedule.findById(
       sanitize(req.body.scheduleId)
     );
@@ -361,6 +394,9 @@ exports.toggle_schedule = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const schedule = await Robot_Schedule.findById(
       sanitize(req.body.scheduleId)
     );
@@ -388,6 +424,9 @@ exports.add_shared_robot = async (req, res) => {
       return res.status(404).send({ message: "user not found" });
     }
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const check_duplicate = await Robot_Share.findOne({
       robotId: robot,
       userId: user,
@@ -417,6 +456,9 @@ exports.list_shared_robot_user = async (req, res) => {
   try {
     let result = [];
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const share_list = await Robot_Share.find({ robotId: robot }).populate(
       "userId"
     );
@@ -436,6 +478,9 @@ exports.list_shared_robot_user = async (req, res) => {
 exports.remove_share_user = async (req, res) => {
   try {
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const firebase_robot = admin.firestore().doc("robots/" + robot.key);
     const user_to_remove = await User.findOne({ uid: sanitize(req.body.uid) });
     const share_data = await Robot_Share.findOne({
@@ -467,10 +512,71 @@ exports.view_notification = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
     const notification_list = await Robot_Notification.find({
       robotId: robot.id,
-    });
+      isComplete: false,
+      userAcknowledge: { $ne: user },
+    }).populate({ path: "userAcknowledge", select: "displayName" });
     return res.status(200).send(notification_list);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+};
+
+exports.accept_notification = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
+    const notifiation = await Robot_Notification.findById(
+      sanitize(req.params.notiId)
+    );
+    if (!notifiation) {
+      return res.status(404).send({ message: "notifiation not found" });
+    }
+    if (!notifiation.robotId.equals(robot._id)) {
+      return res
+        .status(403)
+        .send("you don't have permission to access this data");
+    }
+    notifiation.userAcknowledge = user;
+    notifiation.isComplete = true;
+    await notifiation.save();
+    return res.status(200).send({ message: "Notification accepted" });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+};
+
+exports.abandon_notification = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
+    const notifiation = await Robot_Notification.findById(
+      sanitize(req.params.notiId)
+    );
+    if (!notifiation) {
+      return res.status(404).send({ message: "notifiation not found" });
+    }
+    if (!notifiation.robotId.equals(robot._id)) {
+      return res
+        .status(403)
+        .send("you don't have permission to access this data");
+    }
+    notifiation.userAcknowledge = user;
+    notifiation.isComplete = false;
+    await notifiation.save();
+    return res.status(200).send({ message: "Notification abandoned" });
   } catch (err) {
     console.log(err);
     return res.status(500).send(err);

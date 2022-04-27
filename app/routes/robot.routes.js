@@ -97,6 +97,16 @@ module.exports = function (app) {
     authJwt.verifyToken,
     robotController.view_notification
   );
+  router.get(
+    "/:robotKey/notification/:notiId/accept",
+    authJwt.verifyToken,
+    robotController.accept_notification
+  );
+  router.get(
+    "/:robotKey/notification/:notiId/postpone",
+    authJwt.verifyToken,
+    robotController.abandon_notification
+  );
 
   app.use("/apis/robot", router);
 };

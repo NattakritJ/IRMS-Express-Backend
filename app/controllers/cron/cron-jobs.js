@@ -64,6 +64,13 @@ cron.schedule(JOB_SCHEDULE, async () => {
       if (time.isBetween(pastTenSec, now)) {
         console.log("run daily schedule");
         runSchedule(robot);
+        await new Robot_Notification({
+          robotId: robot,
+          message: `Daily schedule (${schedule.name}) started`,
+          isView: false,
+          isComplete: false,
+        }).save();
+        await schedule.save();
       }
     } else if (schedule.interval === "weekly") {
       let weekDayName = moment().format("dddd").toLowerCase();
@@ -76,6 +83,13 @@ cron.schedule(JOB_SCHEDULE, async () => {
         if (time.isBetween(pastTenSec, now)) {
           console.log("run weekly schedule");
           runSchedule(robot);
+          await new Robot_Notification({
+            robotId: robot,
+            message: `Weekly (${schedule.name}) started`,
+            isView: false,
+            isComplete: false,
+          }).save();
+          await schedule.save();
         }
       }
     } else continue;
