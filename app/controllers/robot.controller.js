@@ -96,7 +96,9 @@ exports.view_statistic = async (req, res) => {
     if (!robot) {
       return res.status(404).send({ message: "robot not found" });
     }
-    const statistic_list = await Robot_Statistic.find({ robotId: robot.id });
+    const statistic_list = await Robot_Statistic.find({
+      robotId: robot.id,
+    }).sort("-createdAt");
     return res.status(200).send(statistic_list);
   } catch (err) {
     console.log(err);
@@ -576,7 +578,7 @@ exports.abandon_notification = async (req, res) => {
     notifiation.userAcknowledge = user;
     notifiation.isComplete = false;
     await notifiation.save();
-    return res.status(200).send({ message: "Notification abandoned" });
+    return res.status(200).send({ message: "Notification ignoreded" });
   } catch (err) {
     console.log(err);
     return res.status(500).send(err);
