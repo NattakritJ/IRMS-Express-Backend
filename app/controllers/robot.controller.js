@@ -257,9 +257,10 @@ const uploadSingle = multer({
     ) {
       cb(null, true);
     } else {
-      cb(null, false);
-      req.validationError = true;
-      return cb(null, false, "Forbidden file extension.");
+      cb(null, true);
+      // cb(null, false);
+      // req.validationError = true;
+      // return cb(null, false, "Forbidden file extension.");
     }
   },
 }).single("file");
@@ -316,6 +317,31 @@ exports.view_setting = async (req, res) => {
     }
     const setting_list = await Robot_Setting.find({ robotId: robot.id });
     return res.status(200).send(setting_list);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+};
+
+exports.update_setting = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
+    const setting = await Robot_Setting.findById(sanitize(req.body.settingId));
+    if (!setting.robotId.equals(robot.id) || !robot.ownerId.equals(user.id)) {
+      return res
+        .status(403)
+        .send({ Message: "You don't have permission to edit this record." });
+    }
+    setting.value = sanitize(req.body.value);
+    await setting.save();
+    return res.status(200).send({
+      message:
+        "Your robot " + setting.key + " has been updated to: " + setting.value,
+    });
   } catch (err) {
     console.log(err);
     return res.status(500).send(err);

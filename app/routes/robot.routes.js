@@ -108,5 +108,11 @@ module.exports = function (app) {
     robotController.abandon_notification
   );
 
+  router.post(
+    "/:robotKey/setting/update",
+    authJwt.verifyToken,
+    robotController.update_setting
+  );
+
   app.use("/apis/robot", router);
 };
