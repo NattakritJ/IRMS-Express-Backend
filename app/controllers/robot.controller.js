@@ -291,7 +291,11 @@ exports.upload_video = async (req, res) => {
       })
       .on("error", (err) => {
         console.log(err);
-      })
+      }).on('progress', progress => {
+        console.log(
+          'Percent complete: %s',
+          progress.percentComplete
+        )})
       .on("complete", () => {
         fs.unlinkSync(path.join(__dirname, "..", "public", fileName));
       });
@@ -299,7 +303,7 @@ exports.upload_video = async (req, res) => {
       robotId: robot,
       date: new Date(),
       fileName: fileNameMp4,
-      url: `${process.env.SERVER_URL}/video/${fileNameMp4}`,
+      url: `${process.env.BACKEND_URL}/video/${fileNameMp4}`,
     }).save();
     return res.status(200).send();
   } catch (err) {
