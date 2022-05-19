@@ -15,5 +15,6 @@ db.robot_setting = require("./robot/robotSetting.model");
 db.robot_statistic = require("./robot/robotStatistic.model");
 db.robot_video = require("./robot/robotVideo.model");
 db.robot_share = require("./robot/robotShare.model");
+db.log = require("./log/log.model");
 
 module.exports = db;

@@ -15,6 +15,7 @@ const Robot_Video = db.robot_video;
 const Robot_Schedule = db.robot_schedule;
 const Robot_Share = db.robot_share;
 const Robot_Notification = db.robot_nofitication;
+const Log = db.log;
 
 exports.add_robot = async (req, res) => {
   try {
@@ -25,6 +26,11 @@ exports.add_robot = async (req, res) => {
       key: sanitize(req.body.key),
     });
     await new_robot.save();
+    new Log({
+      user: user,
+      robot: new_robot,
+      message: "Add robot",
+    }).save();
     return res.status(200).send({ message: "Robot added" });
   } catch (err) {
     console.log(err);
@@ -66,6 +72,11 @@ exports.edit_robot = async (req, res) => {
     }
     if (req.body.displayName) {
       robot.displayName = sanitize(req.body.displayName);
+      new Log({
+        user: user,
+        robot: robot,
+        message: "Edit robot display name",
+      }).save();
     }
     await robot.save();
     return res.status(200).send(robot);
@@ -125,6 +136,11 @@ exports.delete_statistic = async (req, res) => {
         .send({ Message: "You don't have permission to edit this record." });
     }
     await statistic.delete();
+    new Log({
+      user: user,
+      robot: robot,
+      message: "Delete statistic",
+    }).save();
     return res.status(200).send({ message: "record deleted" });
   } catch (err) {
     console.log(err);
@@ -225,6 +241,11 @@ exports.delete_video = async (req, res) => {
       });
     }
     await video.delete();
+    new Log({
+      user: user,
+      robot: robot,
+      message: "Delete video",
+    }).save();
     return res.status(200).send({ message: "record deleted" });
   } catch (err) {
     console.log(err);
@@ -341,6 +362,11 @@ exports.update_setting = async (req, res) => {
     }
     setting.value = sanitize(req.body.value);
     await setting.save();
+    new Log({
+      user: user,
+      robot: robot,
+      message: "Change robot " + setting.key + " to " + setting.value,
+    }).save();
     return res.status(200).send({
       message:
         "Your robot " + setting.key + " has been updated to: " + setting.value,
@@ -388,6 +414,11 @@ exports.create_schedule = async (req, res) => {
     const schedule_list = await Robot_Schedule.find({ robotId: robot.id }).sort(
       { hour: 1, minute: 1 }
     );
+    new Log({
+      user: user,
+      robot: robot,
+      message: "Create schedule " + req.body.name,
+    }).save();
     return res.status(200).send(schedule_list);
   } catch (err) {
     console.log(err);
@@ -413,6 +444,11 @@ exports.delete_schedule = async (req, res) => {
         .status(403)
         .send({ Message: "You don't have permission to edit this record." });
     }
+    new Log({
+      user: user,
+      robot: robot,
+      message: "Delete schedule " + schedule.name,
+    }).save();
     await schedule.delete();
     return res.status(200).send({ message: "record deleted" });
   } catch (err) {
@@ -441,6 +477,11 @@ exports.toggle_schedule = async (req, res) => {
     }
     schedule.activate = req.body.activate;
     await schedule.save();
+    new Log({
+      user: user,
+      robot: robot,
+      message: "Set schedule " + schedule.name + " to " + schedule.activate,
+    }).save();
     return res.status(200).send({ state: schedule.activate });
   } catch (err) {
     console.log(err);
@@ -450,6 +491,7 @@ exports.toggle_schedule = async (req, res) => {
 
 exports.add_shared_robot = async (req, res) => {
   try {
+    const ownerUser = await User.findById(req.userId);
     const user = await User.findOne({ email: sanitize(req.body.email) });
     if (!user) {
       return res.status(404).send({ message: "user not found" });
@@ -475,6 +517,11 @@ exports.add_shared_robot = async (req, res) => {
     await new Robot_Share({
       robotId: robot,
       userId: user,
+    }).save();
+    new Log({
+      user: ownerUser,
+      robot: robot,
+      message: "Share robot to " + user.displayName,
     }).save();
     return res.status(200).send({ message: "Share successful" });
   } catch (err) {
@@ -508,6 +555,7 @@ exports.list_shared_robot_user = async (req, res) => {
 
 exports.remove_share_user = async (req, res) => {
   try {
+    const user = await User.findById(req.userId);
     const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
     if (!robot) {
       return res.status(404).send({ message: "robot not found" });
@@ -532,6 +580,12 @@ exports.remove_share_user = async (req, res) => {
       await admin.firestore().collection("robotsUsers").doc(doc.id).delete();
     });
     await share_data.delete();
+    new Log({
+      user: user,
+      robot: robot,
+      message:
+        "Remove user " + user_to_remove.displayName + " from robot sharing",
+    }).save();
     return res.status(200).send({ message: "remove user successfully" });
   } catch (err) {
     console.log(err);
@@ -623,6 +677,11 @@ exports.update_waypoint = async (req, res) => {
     }
     robot.waypoint = req.body.waypointArray;
     await robot.save();
+    new Log({
+      user: user,
+      robot: robot,
+      message: "Update waypoint",
+    }).save();
     return res.status(200).send({
       message: "Waypoint update successfully",
     });
@@ -640,6 +699,31 @@ exports.get_waypoint = async (req, res) => {
       return res.status(404).send({ message: "robot not found" });
     }
     return res.status(200).send(robot.waypoint);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+};
+
+exports.get_log = async (req, res) => {
+  try {
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    const logs = await Log.find({ robot: robot.id })
+      .populate({ path: "user", select: "displayName" })
+      .sort("-createdAt");
+    return res.status(200).send(logs);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+};
+
+exports.connect_to_ws = async (req, res) => {
+  try {
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    robot.lastConnection = new Date();
+    robot.save();
+    return res.status(200).send();
   } catch (err) {
     console.log(err);
     return res.status(500).send(err);
