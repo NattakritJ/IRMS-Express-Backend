@@ -114,5 +114,11 @@ module.exports = function (app) {
     robotController.update_setting
   );
 
+  router.post(
+    "/:robotKey/waypoint",
+    authJwt.verifyToken,
+    robotController.update_waypoint
+  );
+
   app.use("/apis/robot", router);
 };

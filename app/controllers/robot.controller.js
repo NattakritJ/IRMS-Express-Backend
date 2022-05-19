@@ -291,11 +291,10 @@ exports.upload_video = async (req, res) => {
       })
       .on("error", (err) => {
         console.log(err);
-      }).on('progress', progress => {
-        console.log(
-          'Percent complete: %s',
-          progress.percentComplete
-        )})
+      })
+      .on("progress", (progress) => {
+        console.log("Percent complete: %s", progress.percentComplete);
+      })
       .on("complete", () => {
         fs.unlinkSync(path.join(__dirname, "..", "public", fileName));
       });
@@ -609,6 +608,24 @@ exports.abandon_notification = async (req, res) => {
     notifiation.isComplete = false;
     await notifiation.save();
     return res.status(200).send({ message: "Notification ignoreded" });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+};
+
+exports.update_waypoint = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
+    robot.waypoint = req.body.waypointArray;
+    await robot.save();
+    return res.status(200).send({
+      message: "Waypoint update successfully",
+    });
   } catch (err) {
     console.log(err);
     return res.status(500).send(err);

@@ -10,6 +10,7 @@ const Robot = mongoose.model(
     },
     displayName: String,
     key: String,
+    waypoint: Array,
     lastOperationTime: { type: String, default: "" },
   }).plugin(sanitizerPlugin)
 );
