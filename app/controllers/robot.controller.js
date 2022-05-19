@@ -631,3 +631,17 @@ exports.update_waypoint = async (req, res) => {
     return res.status(500).send(err);
   }
 };
+
+exports.get_waypoint = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    const robot = await Robot.findOne({ key: sanitize(req.params.robotKey) });
+    if (!robot) {
+      return res.status(404).send({ message: "robot not found" });
+    }
+    return res.status(200).send(robot.waypoint);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+};
