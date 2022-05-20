@@ -126,11 +126,7 @@ module.exports = function (app) {
     robotController.get_waypoint
   );
 
-  router.get(
-    "/:robotKey/connect",
-    authJwt.verifyToken,
-    robotController.connect_to_ws
-  );
+  router.get("/:robotKey/connect", robotController.connect_to_ws);
 
   router.get("/:robotKey/logs", authJwt.verifyToken, robotController.get_log);
 
