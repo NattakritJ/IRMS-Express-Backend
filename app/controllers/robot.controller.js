@@ -470,11 +470,6 @@ exports.toggle_schedule = async (req, res) => {
     if (!schedule) {
       return res.status(404).send({ message: "record not found" });
     }
-    if (!schedule.robotId.equals(robot.id) || !robot.ownerId.equals(user.id)) {
-      return res
-        .status(403)
-        .send({ Message: "You don't have permission to edit this record." });
-    }
     schedule.activate = req.body.activate;
     await schedule.save();
     new Log({
@@ -540,6 +535,7 @@ exports.list_shared_robot_user = async (req, res) => {
     const share_list = await Robot_Share.find({ robotId: robot }).populate(
       "userId"
     );
+    console.log(share_list);
     for (let i = 0; i < share_list.length; i++) {
       const firebase_user = await admin
         .auth()
