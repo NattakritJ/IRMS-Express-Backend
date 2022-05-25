@@ -621,11 +621,6 @@ exports.accept_notification = async (req, res) => {
     if (!notifiation) {
       return res.status(404).send({ message: "notifiation not found" });
     }
-    if (!notifiation.robotId.equals(robot._id)) {
-      return res
-        .status(403)
-        .send("you don't have permission to access this data");
-    }
     notifiation.userAcknowledge = user;
     notifiation.isComplete = true;
     await notifiation.save();
@@ -648,11 +643,6 @@ exports.abandon_notification = async (req, res) => {
     );
     if (!notifiation) {
       return res.status(404).send({ message: "notifiation not found" });
-    }
-    if (!notifiation.robotId.equals(robot._id)) {
-      return res
-        .status(403)
-        .send("you don't have permission to access this data");
     }
     notifiation.userAcknowledge = user;
     notifiation.isComplete = false;
