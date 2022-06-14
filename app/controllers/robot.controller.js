@@ -7,7 +7,7 @@ const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 const util = require("util");
-const Robot_Setting = require("../models/robot/robotSetting.model");
+const Robot_Setting = db.robot_setting;
 const User = db.user;
 const Robot = db.robot;
 const Robot_Statistic = db.robot_statistic;
@@ -26,6 +26,11 @@ exports.add_robot = async (req, res) => {
       key: sanitize(req.body.key),
     });
     await new_robot.save();
+    new Robot_Setting({
+      robotId: new_robot,
+      key: "Speed",
+      value: "0.5",
+    });
     new Log({
       user: user,
       robot: new_robot,
@@ -208,7 +213,9 @@ exports.view_video = async (req, res) => {
     if (!robot) {
       return res.status(404).send({ message: "robot not found" });
     }
-    const video_list = await Robot_Video.find({ robotId: robot.id });
+    const video_list = await Robot_Video.find({ robotId: robot.id }).sort(
+      "-createdAt"
+    );
     return res.status(200).send(video_list);
   } catch (err) {
     console.log(err);
